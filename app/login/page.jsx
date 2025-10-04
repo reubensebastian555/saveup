@@ -3,14 +3,16 @@ export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const searchParams = useSearchParams();
   const [banner, setBanner] = useState("");
 
   useEffect(() => {
@@ -22,20 +24,27 @@ export default function LoginPage() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!email || !password) return alert("Email dan password wajib diisi.");
+    if (!email || !password) {
+      alert("Email dan password wajib diisi.");
+      return;
+    }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) return alert(error.message);
-    // Gunakan router daripada window agar kompatibel di Next.js
-    window.location.href = "/dashboard";
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        alert(error.message || "Gagal login. Coba lagi.");
+        return;
+      }
+      router.push("/dashboard");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#fff7f0] px-4">
       <div className="w-full max-w-lg">
         <div className="relative">
-          {/* Badge logo FRAMED */}
           <div className="absolute left-1/2 -top-16 -translate-x-1/2">
             <div className="rounded-full bg-white p-2 shadow-[0_8px_24px_rgba(2,6,23,0.08)] ring-1 ring-slate-200">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-600 shadow-[0_8px_25px_rgba(244,114,23,0.35)]">
@@ -44,7 +53,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Card */}
           <div className="rounded-2xl bg-white p-8 pt-24 shadow-lg">
             <div className="mb-6 flex flex-col items-center">
               <h1 className="text-2xl font-extrabold text-slate-800">
@@ -55,7 +63,6 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* Banner info */}
             {banner && (
               <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-center text-xs text-orange-700">
                 {banner}
@@ -104,10 +111,8 @@ export default function LoginPage() {
 
             <p className="mt-6 text-center text-sm text-slate-600">
               Belum punya akun?{" "}
-              <Link href="/signup">
-                <span className="cursor-pointer font-medium text-orange-600 hover:underline">
-                  Daftar
-                </span>
+              <Link href="/signup" className="font-medium text-orange-600 hover:underline">
+                Daftar
               </Link>
             </p>
           </div>
