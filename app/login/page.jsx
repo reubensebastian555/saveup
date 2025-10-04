@@ -1,4 +1,6 @@
 "use client";
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -25,7 +27,8 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return alert(error.message);
-    window.location = "/dashboard";
+    // Gunakan router daripada window agar kompatibel di Next.js
+    window.location.href = "/dashboard";
   };
 
   return (
